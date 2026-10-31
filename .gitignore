@@ -1,0 +1,25 @@
+# Python & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+
+# Databases & local test files
+*.db
+*.sqlite3
+
+# Screenshots & temp files
+*.png
+*.jpg
+scratch/
+
+# Flutter build artifacts inside root
+ciftlik360_app/build/
+ciftlik360_app/.dart_tool/
+ciftlik360_app/.flutter-plugins
+ciftlik360_app/.flutter-plugins-dependencies
+ciftlik360_app/android/.gradle/
+ciftlik360_app/android/local.properties
+
+# Keep APK release if desired, or exclude:
+# Ciftlik360.apk is small (~22MB), we can keep it or include it.

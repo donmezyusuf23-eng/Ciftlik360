@@ -1,0 +1,22 @@
+{
+  "name": "Çiftlik 360 - Mobil Çiftlik Yönetimi",
+  "short_name": "Çiftlik 360",
+  "description": "Her çiftçinin kolayca kullanabileceği modern sürü, süt, aşı ve finans yönetim sistemi.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#166534",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Çiftlik 360 - Mobil Çiftlik Yönetimi</title>
+  <meta name="theme-color" content="#15803d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" href="/static/icon-192.png">
+
+  <!-- Tailwind CSS & FontAwesome & Chart.js & Html5Qrcode -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Mobil uygulama hissi */
+    html, body {
+      overscroll-behavior-y: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    input, select, textarea {
+      user-select: text;
+    }
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom, 1rem);
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+  <!-- ================= GİRİŞ EKRANI (OTURUM YOKSA) ================= -->
+  <div id="authScreen" class="fixed inset-0 z-50 bg-slate-900 bg-opacity-95 flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl relative">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-brand-100 text-brand-700 rounded-2xl flex items-center justify-center mx-auto mb-3 text-3xl shadow-inner">
+          🌾
+        </div>
+        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Çiftlik 360</h2>
+        <p class="text-sm text-slate-500 font-medium">Akıllı ve Sade Çiftlik Asistanınız</p>
+      </div>
+
+      <div class="flex border-b border-slate-200 mb-5">
+        <button id="tabBtnLogin" onclick="switchAuthTab('login')" class="flex-1 pb-2.5 font-bold text-brand-700 border-b-2 border-brand-700 text-center">Giriş Yap</button>
+        <button id="tabBtnRegister" onclick="switchAuthTab('register')" class="flex-1 pb-2.5 font-semibold text-slate-400 text-center">Yeni Kayıt</button>
+      </div>
+
+      <!-- Giriş Formu -->
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Kullanıcı Adı</label>
+          <input type="text" id="loginUsername" value="cihan" required class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 font-semibold text-slate-800">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Şifre</label>
+          <input type="password" id="loginPassword" value="cihan6690" required class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 font-semibold text-slate-800">
+        </div>
+        <button type="submit" class="w-full py-3.5 bg-brand-700 hover:bg-brand-800 active:scale-95 text-white font-bold rounded-xl shadow-lg transition">
+          🚀 Çiftliğime Giriş Yap
+        </button>
+      </form>
+
+      <!-- Kayıt Formu -->
+      <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-3 hidden">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Kullanıcı Adı</label>
+          <input type="text" id="regUsername" required placeholder="Örn: ahmetaga" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Şifre</label>
+          <input type="password" id="regPassword" required placeholder="Şifreniz" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Çiftlik Adı</label>
+          <input type="text" id="regFarm" placeholder="Örn: Yeşil Vadi Çiftliği" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl">
+        </div>
+        <button type="submit" class="w-full py-3 bg-brand-700 hover:bg-brand-800 active:scale-95 text-white font-bold rounded-xl shadow mt-2">
+          Hesap Oluştur
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ================= MOBİL ÜST ÇUBUK (HEADER) ================= -->
+  <header class="sticky top-0 z-40 bg-brand-700 text-white shadow-md px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-2xl border border-white/20">
+        🌾
+      </div>
+      <div>
+        <h1 class="text-base font-extrabold tracking-tight leading-tight flex items-center gap-1.5">
+          <span>Çiftlik 360</span>
+          <span class="text-[10px] bg-emerald-500/40 text-emerald-100 font-bold px-1.5 py-0.5 rounded-full border border-emerald-400/30">Mobil</span>
+        </h1>
+        <p id="headerFarmName" class="text-xs text-brand-100 font-medium truncate max-w-[170px]">Cihan Çiftliği</p>
+      </div>
+    </div>
+
+    <!-- Hızlı Aksiyonlar -->
+    <div class="flex items-center space-x-2">
+      <!-- Barkod / Kamera Butonu -->
+      <button onclick="openScannerModal()" class="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 active:scale-90 flex items-center justify-center text-white transition text-sm font-semibold" title="Kamera ile Küpe Tara">
+        <i class="fa-solid fa-qrcode"></i>
+      </button>
+      <!-- Çıkış / Profil -->
+      <button onclick="logout()" class="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 active:scale-90 flex items-center justify-center text-white transition text-sm font-semibold" title="Çıkış Yap">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+      </button>
+    </div>
+  </header>
+
+
+  <!-- ================= ANA İÇERİK ALANI ================= -->
+  <main class="flex-1 overflow-y-auto pb-28 pt-2 px-3.5 max-w-lg mx-auto w-full">
+
+    <!-- UYARI / HATIRLATICI KARTLARI (DİNAMİK) -->
+    <div id="alertsContainer" class="space-y-2 mb-3"></div>
+
+    <!-- SEKME 1: ANA PANEL (DASHBOARD) -->
+    <section id="tabDashboard" class="space-y-4">
+      
+      <!-- HIZLI ÖZET KARTLARI -->
+      <div class="grid grid-cols-2 gap-2.5">
+        <!-- Toplam Sürü -->
+        <div onclick="switchTab('animals')" class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/80 active:scale-[0.98] transition cursor-pointer">
+          <div class="flex items-center justify-between text-slate-400 mb-1">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Sürü Büyüklüğü</span>
+            <span class="w-7 h-7 rounded-lg bg-emerald-50 text-brand-700 flex items-center justify-center text-xs">
+              <i class="fa-solid fa-cow"></i>
+            </span>
+          </div>
+          <div class="flex items-baseline gap-1.5">
+            <span id="statTotalAnimals" class="text-2xl font-black text-slate-800">--</span>
+            <span class="text-xs font-semibold text-slate-500">baş hayvan</span>
+          </div>
+          <div class="text-[11px] text-slate-500 mt-1 font-medium flex gap-2">
+            <span>🐄 <b id="statAdultCount">-</b> yetişkin</span>
+            <span>👶 <b id="statCalfCount">-</b> buzağı</span>
+          </div>
+        </div>
+
+        <!-- Bugün Sağılan Süt -->
+        <div onclick="switchTab('milk')" class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/80 active:scale-[0.98] transition cursor-pointer">
+          <div class="flex items-center justify-between text-slate-400 mb-1">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Bugünkü Süt</span>
+            <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+              <i class="fa-solid fa-glass-water"></i>
+            </span>
+          </div>
+          <div class="flex items-baseline gap-1">
+            <span id="statTodayMilk" class="text-2xl font-black text-blue-600">--</span>
+            <span class="text-xs font-bold text-slate-500">Litre</span>
+          </div>
+          <div class="text-[11px] text-blue-700/80 mt-1 font-semibold">
+            🥛 Günlük Sağım Takibi
+          </div>
+        </div>
+
+        <!-- Aktif Gebelikler -->
+        <div onclick="switchTab('pregnancy')" class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/80 active:scale-[0.98] transition cursor-pointer">
+          <div class="flex items-center justify-between text-slate-400 mb-1">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Gebe İnekler</span>
+            <span class="w-7 h-7 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center text-xs">
+              <i class="fa-solid fa-heart"></i>
+            </span>
+          </div>
+          <div class="flex items-baseline gap-1">
+            <span id="statPregnantCount" class="text-2xl font-black text-pink-600">--</span>
+            <span class="text-xs font-semibold text-slate-500">gebe</span>
+          </div>
+          <div class="text-[11px] text-slate-500 mt-1 font-medium">
+            🤰 Doğum Takvimi
+          </div>
+        </div>
+
+        <!-- Bu Ayki Net Kasa -->
+        <div onclick="switchTab('finance')" class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/80 active:scale-[0.98] transition cursor-pointer">
+          <div class="flex items-center justify-between text-slate-400 mb-1">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Aylık Kasa</span>
+            <span class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
+              <i class="fa-solid fa-wallet"></i>
+            </span>
+          </div>
+          <div class="flex items-baseline gap-1">
+            <span id="statNetProfit" class="text-xl font-black text-slate-800">--</span>
+          </div>
+          <div class="text-[11px] text-slate-500 mt-1 font-medium flex justify-between">
+            <span class="text-emerald-600">↑<span id="statMonthIncome">-</span></span>
+            <span class="text-rose-500">↓<span id="statMonthExpense">-</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- HIZLI İŞLEM BUTONLARI -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+        <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3">Hızlı İşlemler</h3>
+        <div class="grid grid-cols-4 gap-2">
+          <button onclick="openModal('modalMilk')" class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-blue-50 text-blue-700 active:scale-95 transition">
+            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-base mb-1.5">
+              🥛
+            </div>
+            <span class="text-xs font-bold">Süt Gir</span>
+          </button>
+          
+          <button onclick="openModal('modalVaccine')" class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-purple-50 text-purple-700 active:scale-95 transition">
+            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-base mb-1.5">
+              💉
+            </div>
+            <span class="text-xs font-bold">Aşı Planla</span>
+          </button>
+
+          <button onclick="openModal('modalFinance')" class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-amber-50 text-amber-700 active:scale-95 transition">
+            <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-base mb-1.5">
+              💰
+            </div>
+            <span class="text-xs font-bold">Kasa Kaydı</span>
+          </button>
+
+          <button onclick="openScannerModal()" class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-emerald-50 text-emerald-800 active:scale-95 transition">
+            <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-base mb-1.5">
+              📷
+            </div>
+            <span class="text-xs font-bold">Küpe Tara</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- HAFTALIK SÜT GRAFİĞİ -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h3 class="text-sm font-black text-slate-800">Süt Verim Trendi</h3>
+            <p class="text-[11px] text-slate-500 font-medium">Son günlerin sağım grafiği</p>
+          </div>
+          <button onclick="switchTab('milk')" class="text-xs font-bold text-brand-700 hover:underline">Tümü →</button>
+        </div>
+        <div class="h-44 w-full">
+          <canvas id="dashboardMilkChart"></canvas>
+        </div>
+      </div>
+
+      <!-- YAKLAŞAN AŞILAR LİSTESİ (ÖZET) -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-black text-slate-800 flex items-center gap-2">
+            <span>💉</span>
+            <span>Aşı Takvimi</span>
+          </h3>
+          <button onclick="switchTab('vaccines')" class="text-xs font-bold text-brand-700 hover:underline">Tümünü Gör</button>
+        </div>
+        <div id="quickVaccineList" class="space-y-2">
+          <p class="text-xs text-slate-400 py-2 text-center">Yükleniyor...</p>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- SEKME 2: HAYVANLAR (SÜRÜ YÖNETİMİ) -->
+    <section id="tabAnimals" class="space-y-3 hidden">
+      <!-- Üst Arama & Ekleme Barı -->
+      <div class="flex items-center gap-2">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+          <input type="text" id="animalSearchInput" oninput="filterAnimals()" placeholder="Küpe No veya İsim Ara..." 
+                 class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-brand-500 shadow-sm">
+        </div>
+        <button onclick="openModal('modalAddAnimal')" class="px-3.5 py-2.5 bg-brand-700 active:scale-95 text-white font-bold rounded-xl text-sm shadow-sm flex items-center gap-1.5 shrink-0">
+          <i class="fa-solid fa-plus"></i>
+          <span>Ekle</span>
+        </button>
+      </div>
+
+      <!-- Kategori Filtresi: Yetişkin / Buzağı -->
+      <div class="flex bg-slate-200/80 p-1 rounded-xl text-xs font-bold">
+        <button id="btnFilterAll" onclick="setAnimalFilter('all')" class="flex-1 py-2 rounded-lg bg-white text-slate-800 shadow-sm transition">Tümü</button>
+        <button id="btnFilterAdult" onclick="setAnimalFilter('adult')" class="flex-1 py-2 rounded-lg text-slate-600 transition">🐄 Yetişkin</button>
+        <button id="btnFilterCalf" onclick="setAnimalFilter('calf')" class="flex-1 py-2 rounded-lg text-slate-600 transition">👶 Buzağı</button>
+      </div>
+
+      <!-- Hayvan Listesi -->
+      <div id="animalsList" class="space-y-2.5">
+        <p class="text-xs text-slate-400 py-6 text-center">Hayvanlar yükleniyor...</p>
+      </div>
+    </section>
+
+
+    <!-- SEKME 3: SÜT TAKİBİ -->
+    <section id="tabMilk" class="space-y-3.5 hidden">
+      <!-- Hızlı Süt Ekleme Kartı -->
+      <div class="bg-gradient-to-br from-brand-700 to-brand-800 rounded-2xl p-4 text-white shadow-lg">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <span class="text-xs text-brand-200 font-semibold uppercase tracking-wider">Hızlı Sağım Girişi</span>
+            <h3 class="text-lg font-black">Bugünkü Sütü Kaydet</h3>
+          </div>
+          <span class="text-3xl">🥛</span>
+        </div>
+
+        <form onsubmit="handleQuickMilkSubmit(event)" class="space-y-3">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[11px] font-bold text-brand-100">Sağım Vakti</label>
+              <select id="quickMilkTime" class="w-full mt-1 bg-white/20 border border-white/30 rounded-xl px-3 py-2 text-sm font-bold text-white focus:outline-none">
+                <option value="Sabah" class="text-slate-800">☀️ Sabah Sağımı</option>
+                <option value="Akşam" class="text-slate-800">🌙 Akşam Sağımı</option>
+                <option value="Öğle" class="text-slate-800">🌤️ Öğle Sağımı</option>
+                <option value="Günlük Toplam" class="text-slate-800">🥛 Günlük Toplam</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[11px] font-bold text-brand-100">Miktar (Litre)</label>
+              <input type="number" step="0.5" id="quickMilkLiters" required placeholder="Örn: 24.5"
+                     class="w-full mt-1 bg-white text-slate-800 font-black rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500">
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input type="text" id="quickMilkCow" placeholder="İsteğe bağlı: Küpe No (boşsa Genel Sürü)" 
+                   class="flex-1 bg-white/15 border border-white/25 placeholder:text-brand-200 text-white font-medium rounded-xl px-3 py-2 text-xs">
+            <button type="submit" class="px-4 py-2 bg-white text-brand-800 hover:bg-brand-50 active:scale-95 font-black rounded-xl text-xs shadow transition shrink-0">
+              Kaydet ✓
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Süt Geçmişi ve Günlük Döküm -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+        <h3 class="text-sm font-black text-slate-800 mb-2">Günlük Sağım Geçmişi</h3>
+        <div id="milkHistoryList" class="divide-y divide-slate-100">
+          <p class="text-xs text-slate-400 py-4 text-center">Kayıtlar yükleniyor...</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- SEKME 4: GEBELİK & DOĞUM TAKVİMİ -->
+    <section id="tabPregnancy" class="space-y-3.5 hidden">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-black text-slate-800">Tohumlama & Gebelik</h2>
+          <p class="text-xs text-slate-500">Doğum ve kuruya alma tarihleri</p>
+        </div>
+        <button onclick="openModal('modalPregnancy')" class="px-3.5 py-2 bg-pink-600 active:scale-95 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5">
+          <i class="fa-solid fa-plus"></i>
+          <span>Tohumlama Ekle</span>
+        </button>
+      </div>
+
+      <!-- Bilgi Kutusu -->
+      <div class="bg-pink-50 border border-pink-200 rounded-2xl p-3 text-xs text-pink-900 flex items-start gap-2.5">
+        <span class="text-base">💡</span>
+        <p>Tohumlama tarihi girdiğinizde sistem <b>Kontrol (50. gün)</b>, <b>Kuruya Alma (220. gün)</b> ve <b>Doğum (283. gün)</b> tarihlerini otomatik hesaplar.</p>
+      </div>
+
+      <!-- Gebelik Kartları -->
+      <div id="pregnancyList" class="space-y-3">
+        <p class="text-xs text-slate-400 py-6 text-center">Gebelik kayıtları yükleniyor...</p>
+      </div>
+    </section>
+
+
+    <!-- SEKME 5: AŞI & SAĞLIK -->
+    <section id="tabVaccines" class="space-y-3.5 hidden">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-black text-slate-800">Aşı & Sağlık Takvimi</h2>
+          <p class="text-xs text-slate-500">Planlanan ve uygulanan aşılar</p>
+        </div>
+        <button onclick="openModal('modalVaccine')" class="px-3.5 py-2 bg-brand-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5">
+          <i class="fa-solid fa-plus"></i>
+          <span>Aşı Planla</span>
+        </button>
+      </div>
+
+      <!-- Aşı Listesi -->
+      <div id="vaccineFullList" class="space-y-2.5">
+        <p class="text-xs text-slate-400 py-6 text-center">Aşı kayıtları yükleniyor...</p>
+      </div>
+    </section>
+
+
+    <!-- SEKME 6: KASA & FİNANS -->
+    <section id="tabFinance" class="space-y-3.5 hidden">
+      <!-- Kasa Özeti Kartı -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-black text-slate-800">Kasa Durumu</h3>
+          <span class="text-xs font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">Bu Ay</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+            <span class="text-[11px] font-bold text-emerald-700 uppercase">Toplam Gelir</span>
+            <div id="finTotalIncome" class="text-lg font-black text-emerald-800 mt-0.5">0.00 TL</div>
+          </div>
+          <div class="bg-rose-50 rounded-xl p-3 border border-rose-100">
+            <span class="text-[11px] font-bold text-rose-700 uppercase">Toplam Gider</span>
+            <div id="finTotalExpense" class="text-lg font-black text-rose-800 mt-0.5">0.00 TL</div>
+          </div>
+        </div>
+
+        <!-- Hızlı Ekleme Butonları -->
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="openFinanceModal('income')" class="py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-arrow-down"></i>
+            <span>+ Gelir Gir</span>
+          </button>
+          <button onclick="openFinanceModal('expense')" class="py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-arrow-up"></i>
+            <span>+ Gider Gir</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Hareketler Listesi -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+        <h3 class="text-sm font-black text-slate-800 mb-3">Son Kasa Hareketleri</h3>
+        <div id="financeTransactionsList" class="space-y-2">
+          <p class="text-xs text-slate-400 py-4 text-center">İşlemler yükleniyor...</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- ================= ALT GEZİNME ÇUBUĞU (BOTTOM NAV BAR) ================= -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 pb-safe">
+    <div class="max-w-lg mx-auto flex items-center justify-around py-1.5 px-2">
+      <!-- Panel -->
+      <button onclick="switchTab('dashboard')" id="navBtn-dashboard" class="nav-btn flex flex-col items-center justify-center w-14 py-1 text-brand-700 font-bold transition">
+        <i class="fa-solid fa-house text-lg"></i>
+        <span class="text-[10px] mt-1 font-semibold">Panel</span>
+      </button>
+
+      <!-- Hayvanlar -->
+      <button onclick="switchTab('animals')" id="navBtn-animals" class="nav-btn flex flex-col items-center justify-center w-14 py-1 text-slate-400 font-medium transition">
+        <i class="fa-solid fa-cow text-lg"></i>
+        <span class="text-[10px] mt-1 font-semibold">Hayvanlar</span>
+      </button>
+
+      <!-- Süt -->
+      <button onclick="switchTab('milk')" id="navBtn-milk" class="nav-btn flex flex-col items-center justify-center w-14 py-1 text-slate-400 font-medium transition">
+        <i class="fa-solid fa-glass-water text-lg"></i>
+        <span class="text-[10px] mt-1 font-semibold">Süt</span>
+      </button>
+
+      <!-- Gebelik -->
+      <button onclick="switchTab('pregnancy')" id="navBtn-pregnancy" class="nav-btn flex flex-col items-center justify-center w-14 py-1 text-slate-400 font-medium transition">
+        <i class="fa-solid fa-heart text-lg"></i>
+        <span class="text-[10px] mt-1 font-semibold">Gebelik</span>
+      </button>
+
+      <!-- Aşı & Sağlık -->
+      <button onclick="switchTab('vaccines')" id="navBtn-vaccines" class="nav-btn flex flex-col items-center justify-center w-14 py-1 text-slate-400 font-medium transition">
+        <i class="fa-solid fa-syringe text-lg"></i>
+        <span class="text-[10px] mt-1 font-semibold">Aşı</span>
+      </button>
+
+      <!-- Kasa -->
+      <button onclick="switchTab('finance')" id="navBtn-finance" class="nav-btn flex flex-col items-center justify-center w-14 py-1 text-slate-400 font-medium transition">
+        <i class="fa-solid fa-wallet text-lg"></i>
+        <span class="text-[10px] mt-1 font-semibold">Kasa</span>
+      </button>
+    </div>
+  </nav>
+
+
+  <!-- ================= MODALLAR VE FORMLAR ================= -->
+
+  <!-- 1. HAYVAN KARNESİ / DETAY MODALI -->
+  <div id="modalAnimalDetail" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-slide-up">
+      <!-- Başlık -->
+      <div class="p-4 bg-brand-700 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl" id="detailIcon">
+            🐄
+          </div>
+          <div>
+            <h3 id="detailAnimalName" class="text-base font-black">Hayvan Detayı</h3>
+            <p id="detailTag" class="text-xs text-brand-100 font-semibold font-mono">TR-000</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modalAnimalDetail')" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">✕</button>
+      </div>
+
+      <!-- İçerik -->
+      <div class="p-4 overflow-y-auto space-y-4 flex-1">
+        <!-- Bilgi Rozetleri -->
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+            <span class="text-[10px] font-bold text-slate-400 block uppercase">Cins/Irk</span>
+            <span id="detailBreed" class="text-xs font-black text-slate-700">-</span>
+          </div>
+          <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+            <span class="text-[10px] font-bold text-slate-400 block uppercase">Cinsiyet</span>
+            <span id="detailGender" class="text-xs font-black text-slate-700">-</span>
+          </div>
+          <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+            <span class="text-[10px] font-bold text-slate-400 block uppercase">Kategori</span>
+            <span id="detailCategory" class="text-xs font-black text-slate-700">-</span>
+          </div>
+        </div>
+
+        <!-- Aşı Geçmişi -->
+        <div>
+          <h4 class="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Aşı Geçmişi</h4>
+          <div id="detailVaccineList" class="space-y-1.5"></div>
+        </div>
+
+        <!-- Gebelik Durumu (varsa) -->
+        <div id="detailPregnancySection" class="hidden">
+          <h4 class="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Gebelik Durumu</h4>
+          <div id="detailPregnancyBox" class="bg-pink-50 p-3 rounded-xl border border-pink-100 text-xs text-pink-900"></div>
+        </div>
+      </div>
+
+      <!-- Alt Hızlı İşlem -->
+      <div class="p-3 bg-slate-50 border-t border-slate-100 flex gap-2">
+        <button id="btnQuickMilkForAnimal" class="flex-1 py-2.5 bg-blue-600 active:scale-95 text-white font-bold rounded-xl text-xs shadow">
+          🥛 Süt Ekle
+        </button>
+        <button id="btnQuickVaccineForAnimal" class="flex-1 py-2.5 bg-purple-600 active:scale-95 text-white font-bold rounded-xl text-xs shadow">
+          💉 Aşı Planla
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 2. BARKOD / QR KÜPE TARAYICI MODALI -->
+  <div id="modalScanner" class="fixed inset-0 z-50 bg-black/85 flex flex-col items-center justify-between p-4 hidden">
+    <div class="w-full max-w-sm flex items-center justify-between text-white pt-2">
+      <h3 class="font-extrabold text-base flex items-center gap-2">
+        <i class="fa-solid fa-camera"></i>
+        <span>Küpe Barkodu Okutun</span>
+      </h3>
+      <button onclick="closeScannerModal()" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">✕</button>
+    </div>
+
+    <!-- Kamera Önizleme Kutusu -->
+    <div class="w-full max-w-sm bg-black rounded-3xl overflow-hidden border-2 border-brand-500 shadow-2xl relative my-auto">
+      <div id="qrReader" class="w-full"></div>
+      <div class="p-3 bg-slate-900/90 text-center text-xs text-slate-300">
+        Kamerayı hayvanın kulağındaki küpeye veya QR koda tutun.
+      </div>
+    </div>
+
+    <!-- Elle Giriş Fallback -->
+    <div class="w-full max-w-sm pb-4">
+      <div class="flex gap-2">
+        <input type="text" id="manualTagInput" placeholder="Veya Küpe No Elle Yazın..." class="flex-1 bg-white px-3.5 py-2.5 rounded-xl text-sm font-semibold">
+        <button onclick="handleManualTagSearch()" class="px-4 py-2.5 bg-brand-600 text-white font-bold rounded-xl text-sm">Bul</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 3. YENİ HAYVAN EKLEME MODALI -->
+  <div id="modalAddAnimal" class="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-black text-slate-800">Yeni Hayvan Kaydı</h3>
+        <button onclick="closeModal('modalAddAnimal')" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+      </div>
+
+      <div class="flex bg-slate-100 p-1 rounded-xl text-xs font-bold mb-4">
+        <button type="button" id="tabAddAdult" onclick="switchAddAnimalType('adult')" class="flex-1 py-2 rounded-lg bg-white shadow-sm text-brand-700">🐄 Yetişkin İnek/Boğa</button>
+        <button type="button" id="tabAddCalf" onclick="switchAddAnimalType('calf')" class="flex-1 py-2 rounded-lg text-slate-500">👶 Yeni Doğan Buzağı</button>
+      </div>
+
+      <!-- Yetişkin Formu -->
+      <form id="formAddAdult" onsubmit="handleAddAdult(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Küpe Numarası *</label>
+          <input type="text" id="adultTag" required placeholder="Örn: TR-06-123456" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold font-mono">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">İsim / Lakap</label>
+            <input type="text" id="adultName" placeholder="Örn: Kınalı, Sarıkız" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Irkı / Cinsi</label>
+            <select id="adultBreed" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm">
+              <option value="Simental">Simental</option>
+              <option value="Holstein">Holstein</option>
+              <option value="Montofon">Montofon</option>
+              <option value="Yerli Kara">Yerli Kara</option>
+              <option value="Angus">Angus</option>
+              <option value="Diğer">Diğer</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3 bg-brand-700 active:scale-95 text-white font-bold rounded-xl shadow mt-2">
+          Hayvanı Kaydet
+        </button>
+      </form>
+
+      <!-- Buzağı Formu -->
+      <form id="formAddCalf" onsubmit="handleAddCalf(event)" class="space-y-3 hidden">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Buzağı Küpe No *</label>
+          <input type="text" id="calfTag" required placeholder="Örn: TR-06-987654" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold font-mono">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">İsim</label>
+            <input type="text" id="calfName" placeholder="Örn: Minik" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Doğum Tarihi *</label>
+            <input type="date" id="calfBirthDate" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Cinsiyet</label>
+            <select id="calfGender" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm">
+              <option value="Dişi">Dişi (Düve)</option>
+              <option value="Erkek">Erkek (Tosun)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Anne Küpe No</label>
+            <input type="text" id="calfMotherTag" placeholder="Örn: 43" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm">
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3 bg-brand-700 active:scale-95 text-white font-bold rounded-xl shadow mt-2">
+          Buzağıyı Kaydet
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 4. YENİ TOHUMLAMA / GEBELİK MODALI -->
+  <div id="modalPregnancy" class="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-black text-slate-800">Tohumlama Kaydı</h3>
+        <button onclick="closeModal('modalPregnancy')" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+      </div>
+
+      <form onsubmit="handleAddPregnancy(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Tohumlanan İnek (Küpe No) *</label>
+          <input type="text" id="pregCowTag" required placeholder="Örn: 43" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold font-mono">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Tohumlama Tarihi *</label>
+            <input type="date" id="pregDate" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Tohumlama Türü</label>
+            <select id="pregType" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm">
+              <option value="Suni Tohumlama">Suni Tohumlama</option>
+              <option value="Tabii Tohumlama">Tabii (Boğa)</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Boğa Irkı / Sperm Kodu</label>
+          <input type="text" id="pregBull" placeholder="Örn: Simental Fleckvieh" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm">
+        </div>
+        <button type="submit" class="w-full py-3 bg-pink-600 active:scale-95 text-white font-bold rounded-xl shadow mt-2">
+          Tohumlamayı Başlat
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 5. YENİ AŞI PLANLAMA MODALI -->
+  <div id="modalVaccine" class="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-black text-slate-800">Aşı / İlaç Planla</h3>
+        <button onclick="closeModal('modalVaccine')" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+      </div>
+
+      <form onsubmit="handleAddVaccine(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Hayvan Küpe No *</label>
+          <input type="text" id="vacCowTag" required placeholder="Örn: 43 veya Tüm Sürü" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold font-mono">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Aşı / Tedavi Adı *</label>
+          <input type="text" id="vacName" required placeholder="Örn: Şap Aşısı, Karma Aşı, İç Parazit" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Planlanan Tarih *</label>
+          <input type="date" id="vacDate" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm">
+        </div>
+        <button type="submit" class="w-full py-3 bg-purple-600 active:scale-95 text-white font-bold rounded-xl shadow mt-2">
+          Aşıyı Planla
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 6. KASA (GELİR / GİDER) MODALI -->
+  <div id="modalFinance" class="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="financeModalTitle" class="text-base font-black text-slate-800">Kasa İşlemi</h3>
+        <button onclick="closeModal('modalFinance')" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+      </div>
+
+      <form onsubmit="handleFinanceSubmit(event)" class="space-y-3">
+        <input type="hidden" id="finType" value="expense">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1" id="finCategoryLabel">Gider Türü / Açıklama *</label>
+          <input type="text" id="finCategory" required placeholder="Örn: Yem Alımı, Veteriner, Mazot" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Tutar (TL) *</label>
+            <input type="number" step="0.5" id="finAmount" required placeholder="0.00" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-black text-slate-800">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Tarih *</label>
+            <input type="date" id="finDate" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm">
+          </div>
+        </div>
+        <button type="submit" id="finSubmitBtn" class="w-full py-3 bg-brand-700 active:scale-95 text-white font-bold rounded-xl shadow mt-2">
+          Kasaya Kaydet
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ================= JAVASCRIPT KODLARI ================= -->
+  <script>
+    // Global State
+    let currentUser = localStorage.getItem('ciftlik_user') || 'cihan';
+    let currentFarmName = localStorage.getItem('ciftlik_name') || 'Cihan Çiftliği';
+    let allAnimals = { yetiskinler: [], buzagilar: [] };
+    let currentAnimalFilter = 'all';
+    let milkChart = null;
+    let qrScanner = null;
+
+    // Başlangıç
+    window.addEventListener('DOMContentLoaded', () => {
+      // PWA Service Worker Kaydı
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW hatası:', err));
+      }
+
+      // Bugünün tarihlerini inputlara hazırla
+      const todayIso = new Date().toISOString().split('T')[0];
+      ['calfBirthDate', 'pregDate', 'vacDate', 'finDate'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = todayIso;
+      });
+
+      if (!currentUser) {
+        document.getElementById('authScreen').classList.remove('hidden');
+      } else {
+        document.getElementById('headerFarmName').textContent = currentFarmName;
+        loadAllData();
+      }
+    });
+
+    // --- TAB GEÇİŞLERİ ---
+    function switchTab(tabName) {
+      const tabs = ['dashboard', 'animals', 'milk', 'pregnancy', 'vaccines', 'finance'];
+      tabs.forEach(t => {
+        const screen = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+        const btn = document.getElementById('navBtn-' + t);
+        if (screen) screen.classList.add('hidden');
+        if (btn) {
+          btn.classList.remove('text-brand-700', 'font-bold');
+          btn.classList.add('text-slate-400', 'font-medium');
+        }
+      });
+
+      const activeScreen = document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+      const activeBtn = document.getElementById('navBtn-' + tabName);
+      if (activeScreen) activeScreen.classList.remove('hidden');
+      if (activeBtn) {
+        activeBtn.classList.add('text-brand-700', 'font-bold');
+        activeBtn.classList.remove('text-slate-400', 'font-medium');
+      }
+
+      // Tab özel veri tazeleme
+      if (tabName === 'dashboard') loadDashboard();
+      if (tabName === 'animals') loadAnimals();
+      if (tabName === 'milk') loadMilk();
+      if (tabName === 'pregnancy') loadPregnancy();
+      if (tabName === 'vaccines') loadVaccines();
+      if (tabName === 'finance') loadFinance();
+    }
+
+    // --- TÜM VERİLERİ YÜKLE ---
+    function loadAllData() {
+      loadDashboard();
+      loadAnimals();
+      loadMilk();
+      loadPregnancy();
+      loadVaccines();
+      loadFinance();
+    }
+
+    // --- DASHBOARD VERİSİ ---
+    async function loadDashboard() {
+      try {
+        const [statsRes, alertsRes] = await Promise.all([
+          fetch(`/api/dashboard/stats?user=${currentUser}`),
+          fetch(`/api/dashboard/alerts?user=${currentUser}`)
+        ]);
+        const stats = await statsRes.json();
+        const alerts = await alertsRes.json();
+
+        // Kartları Doldur
+        document.getElementById('statTotalAnimals').textContent = stats.toplam_hayvan;
+        document.getElementById('statAdultCount').textContent = stats.yetiskin_sayisi;
+        document.getElementById('statCalfCount').textContent = stats.buzagi_sayisi;
+        document.getElementById('statTodayMilk').textContent = stats.bugun_sut_litre;
+        document.getElementById('statPregnantCount').textContent = stats.aktif_gebe_sayisi;
+        
+        const netProfit = stats.bu_ay_net_kar;
+        const profitEl = document.getElementById('statNetProfit');
+        profitEl.textContent = (netProfit >= 0 ? '+' : '') + netProfit.toLocaleString('tr-TR', { minimumFractionDigits: 0 }) + ' ₺';
+        profitEl.className = 'text-xl font-black ' + (netProfit >= 0 ? 'text-emerald-700' : 'text-rose-600');
+        
+        document.getElementById('statMonthIncome').textContent = stats.bu_ay_gelir.toLocaleString('tr-TR') + ' ₺';
+        document.getElementById('statMonthExpense').textContent = stats.bu_ay_gider.toLocaleString('tr-TR') + ' ₺';
+
+        // UYARILAR KARTLARI
+        renderAlerts(alerts);
+
+        // HIZLI AŞI ÖZETİ
+        loadQuickVaccines();
+      } catch (err) {
+        console.error('Dashboard yüklenemedi:', err);
+      }
+    }
+
+    function renderAlerts(alerts) {
+      const container = document.getElementById('alertsContainer');
+      if (!alerts || alerts.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = alerts.map(a => `
+        <div class="p-3 rounded-2xl flex items-center justify-between text-xs font-semibold shadow-sm ${
+          a.tip === 'danger' ? 'bg-rose-50 border border-rose-200 text-rose-900' :
+          a.tip === 'warning' ? 'bg-amber-50 border border-amber-200 text-amber-900' : 'bg-blue-50 border border-blue-200 text-blue-900'
+        }">
+          <div class="flex items-center gap-2">
+            <span class="text-base">${a.tip === 'danger' ? '🚨' : a.tip === 'warning' ? '💉' : '👶'}</span>
+            <div>
+              <p class="font-bold leading-snug">${a.baslik}</p>
+              <p class="text-[11px] opacity-90">${a.mesaj}</p>
+            </div>
+          </div>
+          ${a.kategori === 'asi' ? `<button onclick="completeVaccine(${a.id})" class="px-2.5 py-1.5 bg-brand-700 text-white rounded-lg text-[10px] font-bold shrink-0">Yapıldı ✓</button>` : ''}
+        </div>
+      `).join('');
+    }
+
+    async function loadQuickVaccines() {
+      const container = document.getElementById('quickVaccineList');
+      try {
+        const res = await fetch(`/api/vaccines?user=${currentUser}`);
+        const list = await res.json();
+        const pending = list.filter(v => v.durum === 'Yapılmadı').slice(0, 3);
+        if (pending.length === 0) {
+          container.innerHTML = '<p class="text-xs text-slate-400 py-1 text-center">Planlanmış bekleyen aşı yok. Her şey yolunda! 🌾</p>';
+          return;
+        }
+        container.innerHTML = pending.map(v => `
+          <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+            <div>
+              <p class="text-xs font-bold text-slate-800">${v.asi_adi}</p>
+              <p class="text-[11px] text-slate-500 font-medium">Küpe: <span class="font-mono font-bold">${v.hayvan_kupe}</span> | Tarih: ${v.planlanan_tarih}</p>
+            </div>
+            <button onclick="completeVaccine(${v.id})" class="px-2.5 py-1 bg-purple-100 text-purple-700 active:scale-95 font-bold text-xs rounded-lg">
+              Yapıldı ✓
+            </button>
+          </div>
+        `).join('');
+      } catch (e) {
+        container.innerHTML = '<p class="text-xs text-rose-500">Aşılar yüklenemedi.</p>';
+      }
+    }
+
+    // --- HAYVANLAR LİSTESİ ---
+    async function loadAnimals() {
+      const container = document.getElementById('animalsList');
+      try {
+        const res = await fetch(`/api/animals?user=${currentUser}`);
+        allAnimals = await res.json();
+        filterAnimals();
+      } catch (err) {
+        container.innerHTML = '<p class="text-xs text-rose-500 text-center py-4">Hayvan listesi alınamadı.</p>';
+      }
+    }
+
+    function setAnimalFilter(filter) {
+      currentAnimalFilter = filter;
+      ['all', 'adult', 'calf'].forEach(f => {
+        const btn = document.getElementById('btnFilter' + f.charAt(0).toUpperCase() + f.slice(1));
+        if (btn) {
+          if (f === filter) {
+            btn.className = 'flex-1 py-2 rounded-lg bg-white text-slate-800 shadow-sm transition font-bold';
+          } else {
+            btn.className = 'flex-1 py-2 rounded-lg text-slate-600 transition font-medium';
+          }
+        }
+      });
+      filterAnimals();
+    }
+
+    function filterAnimals() {
+      const container = document.getElementById('animalsList');
+      const search = (document.getElementById('animalSearchInput').value || '').toLowerCase().trim();
+
+      let list = [];
+      if (currentAnimalFilter === 'all') {
+        list = [...allAnimals.yetiskinler, ...allAnimals.buzagilar];
+      } else if (currentAnimalFilter === 'adult') {
+        list = [...allAnimals.yetiskinler];
+      } else {
+        list = [...allAnimals.buzagilar];
+      }
+
+      if (search) {
+        list = list.filter(a => (a.kupe_no && a.kupe_no.toLowerCase().includes(search)) || (a.isim && a.isim.toLowerCase().includes(search)) || (a.cins && a.cins.toLowerCase().includes(search)));
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 bg-white rounded-2xl border border-dashed border-slate-300 p-6">
+            <span class="text-3xl">🐄</span>
+            <p class="text-xs font-bold text-slate-600 mt-2">Kayıtlı hayvan bulunamadı</p>
+            <p class="text-[11px] text-slate-400 mt-1">Yukarıdaki "Ekle" butonundan yeni hayvan kaydedebilirsiniz.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(a => `
+        <div onclick="openAnimalDetail('${a.kupe_no}')" class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/80 active:scale-[0.99] transition cursor-pointer flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-11 h-11 rounded-xl ${a.kategori === 'Buzağı' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-800'} flex items-center justify-center text-xl shrink-0 font-bold">
+              ${a.kategori === 'Buzağı' ? '👶' : '🐄'}
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <h4 class="text-sm font-black text-slate-800">${a.isim || 'İsimsiz'}</h4>
+                <span class="text-[10px] font-bold px-1.5 py-0.2 rounded-md ${a.cinsiyet === 'Erkek' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}">${a.cinsiyet || 'Dişi'}</span>
+              </div>
+              <p class="text-xs font-mono font-bold text-slate-600">Küpe: ${a.kupe_no}</p>
+              <p class="text-[11px] text-slate-400 font-medium">${a.cins || 'Irk Belirtilmemiş'} ${a.dogum_tarihi ? '• Doğum: ' + a.dogum_tarihi : ''}</p>
+            </div>
+          </div>
+          <div class="text-slate-300 text-sm">
+            <i class="fa-solid fa-chevron-right"></i>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // --- HAYVAN KARNESİ (DETAY) ---
+    async function openAnimalDetail(kupeNo) {
+      try {
+        const res = await fetch(`/api/animals/${kupeNo}?user=${currentUser}`);
+        if (!res.ok) throw new Error('Hayvan bulunamadı');
+        const d = await res.json();
+
+        document.getElementById('detailAnimalName').textContent = d.isim || 'İsimsiz Hayvan';
+        document.getElementById('detailTag').textContent = d.kupe_no;
+        document.getElementById('detailBreed').textContent = d.cins || '-';
+        document.getElementById('detailGender').textContent = d.cinsiyet || '-';
+        document.getElementById('detailCategory').textContent = d.kategori || 'Yetişkin';
+        document.getElementById('detailIcon').textContent = d.kategori === 'Buzağı' ? '👶' : '🐄';
+
+        // Aşı Listesi
+        const vacBox = document.getElementById('detailVaccineList');
+        if (d.asilar && d.asilar.length > 0) {
+          vacBox.innerHTML = d.asilar.map(v => `
+            <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg text-xs">
+              <span class="font-bold text-slate-700">${v.asi_adi}</span>
+              <span class="font-medium text-[11px] ${v.durum === 'Yapıldı' ? 'text-emerald-600' : 'text-amber-600 font-bold'}">${v.durum} (${v.planlanan_tarih})</span>
+            </div>
+          `).join('');
+        } else {
+          vacBox.innerHTML = '<p class="text-xs text-slate-400 py-1">Kayıtlı aşı bulunmuyor.</p>';
+        }
+
+        // Gebelik Bölümü
+        const pregSection = document.getElementById('detailPregnancySection');
+        const pregBox = document.getElementById('detailPregnancyBox');
+        if (d.gebelikler && d.gebelikler.length > 0) {
+          const g = d.gebelikler[0];
+          pregSection.classList.remove('hidden');
+          pregBox.innerHTML = `
+            <div class="font-bold text-pink-900">${g.durum} (${g.tohumlama_turu})</div>
+            <div class="text-[11px] mt-1">Tohumlama: ${g.tohumlama_tarihi} | Tahmini Doğum: <b>${g.tahmini_dogum_tarihi || 'Belirtilmedi'}</b></div>
+          `;
+        } else {
+          pregSection.classList.add('hidden');
+        }
+
+        // Hızlı Butonlar
+        document.getElementById('btnQuickMilkForAnimal').onclick = () => {
+          closeModal('modalAnimalDetail');
+          document.getElementById('quickMilkCow').value = d.kupe_no;
+          switchTab('milk');
+        };
+        document.getElementById('btnQuickVaccineForAnimal').onclick = () => {
+          closeModal('modalAnimalDetail');
+          document.getElementById('vacCowTag').value = d.kupe_no;
+          openModal('modalVaccine');
+        };
+
+        openModal('modalAnimalDetail');
+      } catch (err) {
+        alert('Hayvan bilgisi açılamadı: ' + err.message);
+      }
+    }
+
+    // --- SÜT TAKİBİ VERİLERİ & GRAFİK ---
+    async function loadMilk() {
+      try {
+        const res = await fetch(`/api/milk?user=${currentUser}`);
+        const data = await res.json();
+
+        // Grafik Çizimi (Son 7-14 Gün)
+        renderMilkChart(data.gunluk_ozet || []);
+
+        // Geçmiş Listesi
+        const container = document.getElementById('milkHistoryList');
+        if (!data.son_kayitlar || data.son_kayitlar.length === 0) {
+          container.innerHTML = '<p class="text-xs text-slate-400 py-4 text-center">Henüz süt kaydı girilmedi.</p>';
+          return;
+        }
+
+        container.innerHTML = data.son_kayitlar.map(m => `
+          <div class="py-2.5 flex items-center justify-between text-xs">
+            <div>
+              <p class="font-bold text-slate-800">${m.sagim_vakti} Sağımı ${m.hayvan_kupe && m.hayvan_kupe !== 'Genel Sürü' ? `(Küpe: ${m.hayvan_kupe})` : '(Tüm Çiftlik)'}</p>
+              <p class="text-[11px] text-slate-400 font-medium">${m.tarih}</p>
+            </div>
+            <div class="text-right">
+              <span class="text-sm font-black text-blue-600">${m.litre} Lt</span>
+              ${m.yag_orani ? `<span class="block text-[10px] text-slate-400 font-semibold">%${m.yag_orani} Yağ</span>` : ''}
+            </div>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        console.error('Süt verileri alınamadı:', err);
+      }
+    }
+
+    function renderMilkChart(gunluk) {
+      const ctx = document.getElementById('dashboardMilkChart');
+      if (!ctx) return;
+
+      const labels = gunluk.map(g => g.tarih.slice(5)); // AA-GG
+      const values = gunluk.map(g => g.toplam_litre);
+
+      if (milkChart) milkChart.destroy();
+
+      milkChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels.length ? labels : ['Kayıt Yok'],
+          datasets: [{
+            label: 'Toplam Litre',
+            data: values.length ? values : [0],
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointRadius: 4,
+            pointBackgroundColor: '#2563eb'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: '#f1f5f9' },
+              ticks: { font: { size: 10 } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 10 } }
+            }
+          }
+        }
+      });
+    }
+
+    async function handleQuickMilkSubmit(e) {
+      e.preventDefault();
+      const vakit = document.getElementById('quickMilkTime').value;
+      const litre = parseFloat(document.getElementById('quickMilkLiters').value);
+      const kupe = document.getElementById('quickMilkCow').value.trim();
+
+      try {
+        const res = await fetch('/api/milk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tarih: new Date().toISOString().split('T')[0],
+            sagim_vakti: vakit,
+            litre: litre,
+            hayvan_kupe: kupe,
+            kullanici_adi: currentUser
+          })
+        });
+        if (!res.ok) throw new Error('Kayıt başarısız');
+        document.getElementById('quickMilkLiters').value = '';
+        loadMilk();
+        loadDashboard();
+        alert('🥛 Süt başarıyla kaydedildi!');
+      } catch (err) {
+        alert('Hata: ' + err.message);
+      }
+    }
+
+    // --- GEBELİK TAKVİMİ ---
+    async function loadPregnancy() {
+      const container = document.getElementById('pregnancyList');
+      try {
+        const res = await fetch(`/api/pregnancy?user=${currentUser}`);
+        const list = await res.json();
+
+        if (list.length === 0) {
+          container.innerHTML = `
+            <div class="text-center py-8 bg-white rounded-2xl border border-dashed border-slate-300 p-6">
+              <span class="text-3xl">🤰</span>
+              <p class="text-xs font-bold text-slate-600 mt-2">Aktif tohumlama / gebelik kaydı yok</p>
+              <p class="text-[11px] text-slate-400 mt-1">İneklerinizi tohumladığınızda buraya kaydederek doğum takvimini takip edin.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = list.map(p => `
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold text-slate-400">Küpe No</span>
+                <h4 class="text-sm font-black text-slate-800">${p.hayvan_kupe} ${p.hayvan_adi ? '(' + p.hayvan_adi + ')' : ''}</h4>
+              </div>
+              <span class="text-xs font-bold px-2 py-0.5 rounded-full ${
+                p.durum === 'Doğurdu' ? 'bg-emerald-100 text-emerald-800' : 'bg-pink-100 text-pink-700'
+              }">${p.durum}</span>
+            </div>
+
+            <!-- Gebelik İlerleme Çubuğu -->
+            <div>
+              <div class="flex justify-between text-[11px] font-bold text-slate-600 mb-1">
+                <span>Gebelik: ${p.gebelik_gunu} gün</span>
+                <span class="text-pink-600">${p.kalan_gun !== null ? (p.kalan_gun > 0 ? `Doğuma ${p.kalan_gun} Gün` : 'Doğum Vakti Geldi!') : ''}</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                <div class="bg-pink-500 h-2.5 rounded-full transition-all duration-500" style="width: ${p.ilerleme_yuzdesi}%"></div>
+              </div>
+            </div>
+
+            <!-- Kritik Tarihler -->
+            <div class="grid grid-cols-3 gap-1 text-[11px] bg-slate-50 p-2 rounded-xl text-center">
+              <div>
+                <span class="text-[9px] text-slate-400 block font-bold uppercase">Tohumlama</span>
+                <span class="font-bold text-slate-700">${p.tohumlama_tarihi}</span>
+              </div>
+              <div>
+                <span class="text-[9px] text-slate-400 block font-bold uppercase">Kuruya Alma</span>
+                <span class="font-bold text-amber-700">${p.kuruya_alma_tarihi || '-'}</span>
+              </div>
+              <div>
+                <span class="text-[9px] text-slate-400 block font-bold uppercase">Tahmini Doğum</span>
+                <span class="font-bold text-pink-700">${p.tahmini_dogum_tarihi || '-'}</span>
+              </div>
+            </div>
+
+            <!-- Durum Güncelleme Butonları -->
+            <div class="flex gap-1.5 pt-1">
+              ${p.durum !== 'Doğurdu' ? `
+                <button onclick="updatePregnancyStatus(${p.id}, 'Doğurdu')" class="flex-1 py-1.5 bg-emerald-600 active:scale-95 text-white font-bold rounded-lg text-xs">
+                  👶 Doğurdu!
+                </button>
+              ` : ''}
+              ${p.durum === 'Tohumlandı' ? `
+                <button onclick="updatePregnancyStatus(${p.id}, 'Gebe (Onaylı)')" class="flex-1 py-1.5 bg-blue-600 active:scale-95 text-white font-bold rounded-lg text-xs">
+                  ✓ Gebe Onayla
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = '<p class="text-xs text-rose-500 text-center py-4">Gebelik kayıtları alınamadı.</p>';
+      }
+    }
+
+    async function updatePregnancyStatus(id, newStatus) {
+      if (!confirm(`Bu kaydı '${newStatus}' olarak güncellemek istiyor musunuz?`)) return;
+      try {
+        await fetch(`/api/pregnancy/${id}/status?durum=${encodeURIComponent(newStatus)}&user=${currentUser}`, { method: 'PATCH' });
+        loadPregnancy();
+        loadDashboard();
+      } catch (e) {
+        alert('Güncelleme hatası');
+      }
+    }
+
+    // --- AŞI LİSTESİ ---
+    async function loadVaccines() {
+      const container = document.getElementById('vaccineFullList');
+      try {
+        const res = await fetch(`/api/vaccines?user=${currentUser}`);
+        const list = await res.json();
+
+        if (list.length === 0) {
+          container.innerHTML = '<p class="text-xs text-slate-400 py-6 text-center">Planlanmış aşı bulunmuyor.</p>';
+          return;
+        }
+
+        container.innerHTML = list.map(v => `
+          <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/80 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl ${v.durum === 'Yapıldı' ? 'bg-emerald-100 text-emerald-800' : 'bg-purple-100 text-purple-800'} flex items-center justify-center text-lg shrink-0">
+                💉
+              </div>
+              <div>
+                <h4 class="text-sm font-black text-slate-800">${v.asi_adi}</h4>
+                <p class="text-xs font-semibold text-slate-600">Küpe: <span class="font-mono font-bold">${v.hayvan_kupe}</span></p>
+                <p class="text-[11px] text-slate-400">Tarih: ${v.planlanan_tarih} ${v.yapilis_tarihi ? '• Yapıldı: ' + v.yapilis_tarihi : ''}</p>
+              </div>
+            </div>
+            ${v.durum === 'Yapılmadı' ? `
+              <button onclick="completeVaccine(${v.id})" class="px-3 py-1.5 bg-brand-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-sm">
+                Yapıldı ✓
+              </button>
+            ` : `
+              <span class="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                <i class="fa-solid fa-check"></i> Tamam
+              </span>
+            `}
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = '<p class="text-xs text-rose-500 py-4 text-center">Aşılar yüklenemedi.</p>';
+      }
+    }
+
+    async function completeVaccine(id) {
+      try {
+        await fetch(`/api/vaccines/${id}/complete?user=${currentUser}`, { method: 'PATCH' });
+        loadVaccines();
+        loadDashboard();
+      } catch (e) {
+        alert('Aşı tamamlanamadı.');
+      }
+    }
+
+    // --- KASA & FİNANS ---
+    async function loadFinance() {
+      try {
+        const res = await fetch(`/api/finance?user=${currentUser}`);
+        const data = await res.json();
+
+        let totalExp = 0, totalInc = 0;
+        data.giderler.forEach(g => totalExp += g.tutar);
+        data.gelirler.forEach(i => totalInc += i.tutar);
+
+        document.getElementById('finTotalIncome').textContent = totalInc.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' TL';
+        document.getElementById('finTotalExpense').textContent = totalExp.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' TL';
+
+        // İşlemler
+        const container = document.getElementById('financeTransactionsList');
+        const transactions = [...data.gelirler, ...data.giderler].sort((a,b) => b.tarih.localeCompare(a.tarih)).slice(0, 20);
+
+        if (transactions.length === 0) {
+          container.innerHTML = '<p class="text-xs text-slate-400 py-4 text-center">Henüz kasa hareketi yok.</p>';
+          return;
+        }
+
+        container.innerHTML = transactions.map(t => `
+          <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl text-xs">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg ${t.tip === 'Gelir' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'} flex items-center justify-center font-bold">
+                ${t.tip === 'Gelir' ? '↓' : '↑'}
+              </div>
+              <div>
+                <p class="font-black text-slate-800">${t.gelir_turu || t.gider_turu}</p>
+                <p class="text-[10px] text-slate-400 font-medium">${t.tarih} ${t.alici ? '• ' + t.alici : ''}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-black ${t.tip === 'Gelir' ? 'text-emerald-700' : 'text-rose-600'}">
+                ${t.tip === 'Gelir' ? '+' : '-'}${t.tutar.toLocaleString('tr-TR')} TL
+              </span>
+            </div>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        console.error('Finans verileri yüklenemedi:', err);
+      }
+    }
+
+    // --- MODAL AÇ / KAPAT FONKSİYONLARI ---
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('hidden');
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    }
+
+    function openFinanceModal(type) {
+      document.getElementById('finType').value = type;
+      if (type === 'income') {
+        document.getElementById('financeModalTitle').textContent = '💰 Yeni Gelir Ekle';
+        document.getElementById('finCategoryLabel').textContent = 'Gelir Türü (Örn: Süt Satışı, Buzağı Satışı) *';
+        document.getElementById('finSubmitBtn').className = 'w-full py-3 bg-emerald-600 active:scale-95 text-white font-bold rounded-xl shadow mt-2';
+        document.getElementById('finSubmitBtn').textContent = 'Geliri Kaydet';
+      } else {
+        document.getElementById('financeModalTitle').textContent = '💸 Yeni Gider Ekle';
+        document.getElementById('finCategoryLabel').textContent = 'Gider Türü (Örn: Yem, Veteriner, Mazot) *';
+        document.getElementById('finSubmitBtn').className = 'w-full py-3 bg-rose-600 active:scale-95 text-white font-bold rounded-xl shadow mt-2';
+        document.getElementById('finSubmitBtn').textContent = 'Gideri Kaydet';
+      }
+      openModal('modalFinance');
+    }
+
+    // Hayvan Ekle Sekme Değişimi
+    function switchAddAnimalType(type) {
+      if (type === 'adult') {
+        document.getElementById('formAddAdult').classList.remove('hidden');
+        document.getElementById('formAddCalf').classList.add('hidden');
+        document.getElementById('tabAddAdult').className = 'flex-1 py-2 rounded-lg bg-white shadow-sm text-brand-700 font-bold';
+        document.getElementById('tabAddCalf').className = 'flex-1 py-2 rounded-lg text-slate-500 font-medium';
+      } else {
+        document.getElementById('formAddAdult').classList.add('hidden');
+        document.getElementById('formAddCalf').classList.remove('hidden');
+        document.getElementById('tabAddAdult').className = 'flex-1 py-2 rounded-lg text-slate-500 font-medium';
+        document.getElementById('tabAddCalf').className = 'flex-1 py-2 rounded-lg bg-white shadow-sm text-brand-700 font-bold';
+      }
+    }
+
+    // --- FORMLARIN SUNUCUYA GÖNDERİLMESİ ---
+    async function handleAddAdult(e) {
+      e.preventDefault();
+      const body = {
+        kupe_no: document.getElementById('adultTag').value.trim(),
+        isim: document.getElementById('adultName').value.trim(),
+        cins: document.getElementById('adultBreed').value,
+        cinsiyet: 'Dişi',
+        kullanici_adi: currentUser
+      };
+      try {
+        const res = await fetch('/api/animals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || 'Kayıt başarısız');
+        closeModal('modalAddAnimal');
+        loadAnimals();
+        loadDashboard();
+        alert('🐄 Yetişkin hayvan eklendi!');
+      } catch (err) {
+        alert('Hata: ' + err.message);
+      }
+    }
+
+    async function handleAddCalf(e) {
+      e.preventDefault();
+      const body = {
+        kupe_no: document.getElementById('calfTag').value.trim(),
+        isim: document.getElementById('calfName').value.trim(),
+        dogum_tarihi: document.getElementById('calfBirthDate').value,
+        cinsiyet: document.getElementById('calfGender').value,
+        anne_kupe_no: document.getElementById('calfMotherTag').value.trim(),
+        kullanici_adi: currentUser
+      };
+      try {
+        const res = await fetch('/api/calves', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || 'Kayıt başarısız');
+        closeModal('modalAddAnimal');
+        loadAnimals();
+        loadDashboard();
+        alert('👶 Buzağı başarıyla kaydedildi!');
+      } catch (err) {
+        alert('Hata: ' + err.message);
+      }
+    }
+
+    async function handleAddPregnancy(e) {
+      e.preventDefault();
+      const body = {
+        hayvan_kupe: document.getElementById('pregCowTag').value.trim(),
+        tohumlama_tarihi: document.getElementById('pregDate').value,
+        tohumlama_turu: document.getElementById('pregType').value,
+        baba_irki: document.getElementById('pregBull').value.trim(),
+        kullanici_adi: currentUser
+      };
+      try {
+        const res = await fetch('/api/pregnancy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || 'Hata');
+        closeModal('modalPregnancy');
+        loadPregnancy();
+        loadDashboard();
+        alert(d.message);
+      } catch (err) {
+        alert('Hata: ' + err.message);
+      }
+    }
+
+    async function handleAddVaccine(e) {
+      e.preventDefault();
+      const body = {
+        hayvan_kupe: document.getElementById('vacCowTag').value.trim(),
+        asi_adi: document.getElementById('vacName').value.trim(),
+        planlanan_tarih: document.getElementById('vacDate').value,
+        kullanici_adi: currentUser
+      };
+      try {
+        const res = await fetch('/api/vaccines', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || 'Hata');
+        closeModal('modalVaccine');
+        loadVaccines();
+        loadDashboard();
+        alert('💉 Aşı planlandı!');
+      } catch (err) {
+        alert('Hata: ' + err.message);
+      }
+    }
+
+    async function handleFinanceSubmit(e) {
+      e.preventDefault();
+      const type = document.getElementById('finType').value;
+      const cat = document.getElementById('finCategory').value.trim();
+      const tutar = parseFloat(document.getElementById('finAmount').value);
+      const tarih = document.getElementById('finDate').value;
+
+      const endpoint = type === 'income' ? '/api/incomes' : '/api/expenses';
+      const body = type === 'income' ? {
+        gelir_turu: cat, tutar: tutar, tarih: tarih, kullanici_adi: currentUser
+      } : {
+        gider_turu: cat, tutar: tutar, tarih: tarih, kullanici_adi: currentUser
+      };
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || 'Hata');
+        closeModal('modalFinance');
+        loadFinance();
+        loadDashboard();
+        alert('Kasa kaydı tamamlandı!');
+      } catch (err) {
+        alert('Hata: ' + err.message);
+      }
+    }
+
+    // --- KAMERA İLE KÜPE BARKODU OKUMA ---
+    function openScannerModal() {
+      openModal('modalScanner');
+      if (typeof Html5Qrcode !== 'undefined') {
+        qrScanner = new Html5Qrcode("qrReader");
+        qrScanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (decodedText) => {
+            // Barkod okundu!
+            closeScannerModal();
+            openAnimalDetail(decodedText.trim());
+          },
+          (errorMessage) => {
+            // Tarama esnası
+          }
+        ).catch(err => {
+          console.log("Kamera başlatılamadı:", err);
+        });
+      }
+    }
+
+    function closeScannerModal() {
+      if (qrScanner) {
+        qrScanner.stop().then(() => {
+          qrScanner.clear();
+          closeModal('modalScanner');
+        }).catch(() => {
+          closeModal('modalScanner');
+        });
+      } else {
+        closeModal('modalScanner');
+      }
+    }
+
+    function handleManualTagSearch() {
+      const val = document.getElementById('manualTagInput').value.trim();
+      if (val) {
+        closeScannerModal();
+        openAnimalDetail(val);
+      }
+    }
+
+    // --- AUTH İŞLEMLERİ ---
+    function switchAuthTab(type) {
+      if (type === 'login') {
+        document.getElementById('loginForm').classList.remove('hidden');
+        document.getElementById('registerForm').classList.add('hidden');
+        document.getElementById('tabBtnLogin').className = 'flex-1 pb-2.5 font-bold text-brand-700 border-b-2 border-brand-700 text-center';
+        document.getElementById('tabBtnRegister').className = 'flex-1 pb-2.5 font-semibold text-slate-400 text-center';
+      } else {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('registerForm').classList.remove('hidden');
+        document.getElementById('tabBtnLogin').className = 'flex-1 pb-2.5 font-semibold text-slate-400 text-center';
+        document.getElementById('tabBtnRegister').className = 'flex-1 pb-2.5 font-bold text-brand-700 border-b-2 border-brand-700 text-center';
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('loginUsername').value.trim();
+      const p = document.getElementById('loginPassword').value.trim();
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kullanici_adi: u, sifre: p })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Giriş başarısız');
+
+        currentUser = data.user.kullanici_adi;
+        currentFarmName = data.user.ciftlik_adi;
+        localStorage.setItem('ciftlik_user', currentUser);
+        localStorage.setItem('ciftlik_name', currentFarmName);
+
+        document.getElementById('headerFarmName').textContent = currentFarmName;
+        document.getElementById('authScreen').classList.add('hidden');
+        loadAllData();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const u = document.getElementById('regUsername').value.trim();
+      const p = document.getElementById('regPassword').value.trim();
+      const farm = document.getElementById('regFarm').value.trim() || 'Bizim Çiftlik';
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kullanici_adi: u, sifre: p, ciftlik_adi: farm })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Kayıt başarısız');
+        alert('Kayıt oluşturuldu! Şimdi giriş yapabilirsiniz.');
+        switchAuthTab('login');
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function logout() {
+      if (confirm('Çiftlikten çıkış yapmak istiyor musunuz?')) {
+        localStorage.removeItem('ciftlik_user');
+        localStorage.removeItem('ciftlik_name');
+        currentUser = null;
+        document.getElementById('authScreen').classList.remove('hidden');
+      }
+    }
+  </script>
+</body>
+</html>
