@@ -54,4 +54,8 @@ flutter build apk --release
 
 ---
 
-Geliştiren: [donmezyusuf23-eng](https://github.com/donmezyusuf23-eng)
+## 👥 Geliştiriciler & Katkıda Bulunanlar
+
+- [donmezyusuf23-eng](https://github.com/donmezyusuf23-eng) (Yusuf Dönmez)
+- [cihan470](https://github.com/cihan470) (Cihan Pektaş)
+
